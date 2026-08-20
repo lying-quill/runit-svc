@@ -1,0 +1,18 @@
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[[shell]]
+indent_style = space
+indent_size = 4
+shell_variant = bash
+switch_case_indent = true
+space_redirects = true
+keep_padding = true
+
+[Makefile]
+indent_style = tab

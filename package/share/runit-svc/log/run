@@ -1,0 +1,48 @@
+#!/bin/bash
+set -eu
+
+# script exit codes:
+# 111 -> chpst
+# 100 -> chpst
+# 200 -> mkdir
+# 201 -> chown
+# 202 -> chmod
+
+. ../conf
+
+if [ -z "$svc_log_dir" ]; then
+    # pause halts the process until a signal arrives.
+    exec pause
+fi
+
+# write logs as root with 0750 if no log user/group/permission is provided
+: "${svc_log_user:=root}"
+: "${svc_log_group:=root}"
+: "${svc_log_dir_perm:=0750}"
+
+if [ ! -d "$svc_log_dir" ]; then
+    mkdir --parents "$svc_log_dir" ||
+        exit 200
+fi
+
+# dir owner/group name (e.g. root)
+_log_dir_owner=$(stat -c "%U" "$svc_log_dir")
+_log_dir_group=$(stat -c "%G" "$svc_log_dir")
+
+if [ "$_log_dir_owner" -ne "$svc_log_user" ] ||
+    [ "$_log_dir_group" -ne "$svc_log_group" ]; then
+    chown --recursive "$svc_log_user:$svc_log_group" "$svc_log_dir" ||
+        exit 201
+fi
+
+# dir permission as octal without the prefixing zero (e.g. 750)
+_log_dir_perms=$(stat -c "%a" "$svc_log_dir")
+
+if [ "0$_log_dir_perms" -ne "$svc_log_dir_perm" ]; then
+    chmod --recursive "$svc_log_dir_perm" "$svc_log_dir" ||
+        exit 202
+fi
+
+exec chpst -v \
+    -u "$svc_log_user:$svc_log_group" \
+    svlogd -ttt "$svc_log_dir"

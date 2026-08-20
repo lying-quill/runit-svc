@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eu
+
+. ./conf
+
+svc_hook_check

@@ -1,0 +1,107 @@
+#!/bin/bash
+set -eu
+
+readonly _template_name="runit-svc"
+
+_down=false
+_with_check=false
+_open_editor=false
+_target_dir=""
+_source_dir=""
+
+: "${SVDIR:=/etc/runit/sv}"
+
+if [ -z "${SVC_TEMPLATE_DIR:-}" ]; then
+    # shellcheck disable=SC2046
+    if [ $(id -u) -ne 0 ]; then
+        _source_dir="${XDG_DATA_HOME:-$HOME/.local/share}/$_template_name"
+    else
+        _source_dir="/usr/local/share/$_template_name"
+        if [ ! -d "$_source_dir" ]; then
+            _source_dir="/usr/share/$_template_name"
+        fi
+    fi
+else
+    _source_dir="$SVC_TEMPLATE_DIR"
+fi
+
+if [ ! -d "$_source_dir" ]; then
+    echo "template directory ('$_source_dir') does not exist. make sure the"
+    echo "package is installed correctly."
+    exit 1
+fi
+
+if [[ $# -lt 2 ]]; then
+    echo "usage: $0 create <service-id> [--with-check] [--down] [--editor]"
+    exit 2
+fi
+
+_command="$1"
+if [[ "$_command" != "create" ]]; then
+    echo "unknown command: $_command. Did you mean 'create'?"
+    exit 3
+fi
+
+_service_id="$2"
+if ! echo "$_service_id" | grep -qE "^[0-9a-z_-]+$"; then
+    echo "service identifier is invalid. it can only contain 0-9, a-z, hyphen " \
+        "and underscore."
+    exit 4
+fi
+
+# TODO: use getopts for arg parsing
+shift 2
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --with-check) _with_check=true ;;
+        --down) _down=true ;;
+        --editor) _open_editor=true ;;
+        -c) _with_check=true ;;
+        -d) _down=true ;;
+        -e) _open_editor=true ;;
+        *)
+            echo "unknown option: $1"
+            exit 5
+            ;;
+    esac
+    shift
+done
+
+_target_dir="$SVDIR/$_service_id"
+if [[ -d "$_target_dir" ]]; then
+    echo "service directory $_target_dir already exists. altering a service is" \
+        "not yet supported"
+    exit 6
+fi
+
+_copies=("conf")
+_links=(
+    "run"
+    "finish"
+    "start"
+    "log/run"
+)
+
+if [[ "$_with_check" == "true" ]]; then
+    _links+=("check")
+fi
+
+if [[ "$_down" == "true" ]]; then
+    _copies+=("down")
+fi
+
+mkdir -p "$_target_dir/log"
+
+for c in "${_copies[@]}"; do
+    cp "$_source_dir/$c" "$_target_dir/$c"
+done
+
+for l in "${_links[@]}"; do
+    ln -sf "$_source_dir/$l" "$_target_dir/$l"
+done
+
+echo "service $_service_id created successfully at $_target_dir"
+
+if [[ "$_open_editor" == "true" ]]; then
+    "${EDITOR:-nano}" "$_target_dir/conf"
+fi

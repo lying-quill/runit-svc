@@ -1,0 +1,80 @@
+#!/bin/bash
+# shellcheck disable=SC2148
+# shellcheck disable=SC2034
+
+# this file contains your service information
+
+# service identifier, which is used for creating its directories and logging.
+# usually the same value as the service binary's name.
+# (e.g. dnsmasq for /usr/bin/dnsmasq)
+svc_id=$(
+    # this evaluates to the name of the current directory!
+    # you might think this is an overkill, but the script in log/run sourcing
+    # the config causes it to be evaluated as "log"
+    # shellcheck disable=SC2046
+    basename $(dirname $(realpath "${BASH_SOURCE[0]}"))
+)
+
+# absolute path to the service binary. (e.g. /usr/bin/dnsmasq)
+svc_bin="/bin/bash"
+
+# commandline args to be passed to the service program:
+svc_args=("-c" "pause")
+
+# user and group you want this service to be ran as. leave unset to run as
+# the parent uid/gid
+# svc_user="$svc_id"
+# svc_group="$svc_id"
+
+# if empty or unset, not created and the svlogd process is not spawned
+svc_log_dir="/var/log/$svc_id"
+# svc_log_user="root"
+# svc_log_group="root"
+# svc_log_dir_perm="0750"
+
+# you can declare variables here to be used later on. if you export these
+# variables they will be caught by chpst and will be injected as env vars
+# to the service process
+export XDG_STATE_HOME="/var/lib"
+export XDG_CACHE_HOME="/var/cache"
+export XDG_DATA_HOME="/usr/share"
+export XDG_CONFIG_HOME="/etc"
+export HOME="$XDG_STATE_HOME/$svc_id"
+
+# if svc_pwd is set, its value is passed as $PWD to chpst, otherwise
+# dirname of the svc_bin is used
+svc_pwd="$HOME"
+
+# an array of directories required to exist with the same user/group as the
+# service process itself:
+svc_dir_create=("$svc_pwd")
+# custom permission to set on those directories:
+# svc_dir_perm="0750"
+
+# for service daemons that do not make their service available immediately after
+# starting, a check program can be added. The sv program will use this check
+# program to better evaluate whether a service is fully started and available
+svc_hook_check() {
+    # example for a mail service listening on localhost:25
+    # exec nc -z localhost 25
+    exit 0
+}
+
+# service start hook
+svc_hook_start() {
+    # if this service depends on other services (e.g. dbus and connmand):
+    # sv start dbus connmand
+    #
+    # example for a webserver being ran under its own user with caps to listen
+    # on privileged ports:
+    #
+    # exec setcap 'cap_net_bind_service=+ep' "$svc_bin"
+    exit 0
+}
+
+# executed when service is stopped. can place cleanup code in here.
+svc_hook_finish() {
+    # if another service depends on this service:
+    # exec sv hup another_service
+    exit 0
+}
