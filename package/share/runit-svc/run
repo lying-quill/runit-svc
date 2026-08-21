@@ -80,10 +80,18 @@ for _svc_dir in "${svc_dir_create[@]}"; do
     _create_dir "$_svc_dir" "$svc_dir_perm" "$svc_user" "$svc_group"
 done
 
-_print_log "[D] exec '$svc_bin ${svc_args[*]}' as '$svc_user:$svc_group' with" \
-    "pwd=$svc_pwd"
+_chpst_args=(
+    "-v"
+    "-0"
+    "-C" "$svc_pwd"
+    "-U" "$svc_user:$svc_group"
+    "-u" "$svc_user:$svc_group"
+)
 
-exec chpst -v -0 -C "$svc_pwd" \
-    -U "$svc_user:$svc_group" \
-    -u "$svc_user:$svc_group" \
-    "$svc_bin" "${svc_args[@]}"
+if [ -n "${svc_env_dir:-}" ]; then
+    _chpst_args+=(-e "$svc_env_dir")
+fi
+
+_print_log "[D] chpst ${_chpst_args[*]} $svc_bin ${svc_args[*]}"
+
+exec chpst "${_chpst_args[@]}" "$svc_bin" "${svc_args[@]}"

@@ -45,6 +45,9 @@ export HOME="$XDG_STATE_HOME/$svc_id"
 # dirname of the svc_bin is used
 svc_pwd="$HOME"
 
+# the env directory to pass to chpst, if unset, nothing is passed
+# svc_env_dir="${XDG_RUNTIME_DIR}/runit/env"
+
 # an array of directories required to exist with the same user/group as the
 # service process itself:
 svc_dir_create=("$svc_pwd")
