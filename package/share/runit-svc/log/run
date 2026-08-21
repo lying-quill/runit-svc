@@ -10,7 +10,7 @@ set -eu
 
 . ../conf
 
-if [ -z "$svc_log_dir" ]; then
+if [ -z "${svc_log_dir:-}" ]; then
     # pause halts the process until a signal arrives.
     exec pause
 fi
