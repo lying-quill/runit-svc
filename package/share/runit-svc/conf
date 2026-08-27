@@ -28,6 +28,8 @@ svc_args=("-c" "pause")
 
 # if empty or unset, not created and the svlogd process is not spawned
 svc_log_dir="/var/log/$svc_id"
+
+# leave these unset to run svlogd with the parent uid/gid
 # svc_log_user="root"
 # svc_log_group="root"
 # svc_log_dir_perm="0750"

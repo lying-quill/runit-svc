@@ -15,9 +15,9 @@ if [ -z "${svc_log_dir:-}" ]; then
     exec pause
 fi
 
-# write logs as root with 0750 if no log user/group/permission is provided
-: "${svc_log_user:=root}"
-: "${svc_log_group:=root}"
+# write logs as current user with 0750 if no log user/group/permission is provided
+: "${svc_log_user:=$(id -un)}"
+: "${svc_log_group:=$(id -un)}"
 : "${svc_log_dir_perm:=0750}"
 
 if [ ! -d "$svc_log_dir" ]; then
@@ -44,5 +44,6 @@ if [ "0$_log_dir_perms" -ne "$svc_log_dir_perm" ]; then
 fi
 
 exec chpst -v \
+    -U "$svc_log_user:$svc_log_group" \
     -u "$svc_log_user:$svc_log_group" \
     svlogd -ttt "$svc_log_dir"
