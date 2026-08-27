@@ -53,7 +53,7 @@ _create_dir() {
 }
 
 # shellcheck disable=SC2128
-: "$svc_bin" "$svc_args" "$svc_dir_create"
+: "$svc_bin"
 
 : "${svc_dir_perm:=0750}"
 : "${svc_pwd:=$(dirname "$svc_bin")}"
@@ -76,9 +76,15 @@ if [ $_start_hook_exit_code -ne 0 ]; then
     exit 201
 fi
 
-for _svc_dir in "${svc_dir_create[@]}"; do
-    _create_dir "$_svc_dir" "$svc_dir_perm" "$svc_user" "$svc_group"
-done
+if declare -p svc_dir_create &> /dev/null; then
+    for _svc_dir in "${svc_dir_create[@]}"; do
+        _create_dir "$_svc_dir" "$svc_dir_perm" "$svc_user" "$svc_group"
+    done
+fi
+
+if ! declare -p svc_args &> /dev/null; then
+    declare -a svc_args
+fi
 
 _chpst_args=(
     "-v"

@@ -18,7 +18,7 @@ svc_id=$(
 # absolute path to the service binary. (e.g. /usr/bin/dnsmasq)
 svc_bin="/bin/bash"
 
-# commandline args to be passed to the service program:
+# commandline args to be passed to the service program (optional):
 svc_args=("-c" "pause")
 
 # user and group you want this service to be ran as. leave unset to run as
