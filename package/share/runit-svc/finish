@@ -3,4 +3,7 @@ set -eu
 
 . ./conf
 
-svc_hook_finish
+# shellcheck disable=SC2154
+if declare -p svc_hook_finish &> /dev/null; then
+    svc_hook_finish
+fi
