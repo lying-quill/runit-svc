@@ -10,7 +10,9 @@ make install
 then you should be able to invoke the utility script:
 ```sh
 # the default value for SVDIR is /etc/runit/sv
-export SVDIR=/home/user/.config/services
+# i suggest using a different SVDIR for system services to prevent
+# conflict with os packages (e.g. /etc/runit/svc)
+export SVDIR=/home/user/.config/service
 runit-svc create your-service-name [--with-check] [--down] [--editor]
 ```
 let's break it down:
@@ -27,7 +29,7 @@ let's break it down:
 __NOTE__: right now combined short args (e.g. `-ecd`) don't work. use `-e -c -d`
 instead.
 
-## How does it work
+## How does it work?
 The install script copies the base template into your system (whether installing
 it system-wide or local). the template directory includes a bunch of shell
 scripts that runit uses to manage the service with. the scripts that are
