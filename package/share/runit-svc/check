@@ -4,6 +4,6 @@ set -eu
 . ./conf
 
 # shellcheck disable=SC2154
-if declare -p svc_hook_check &> /dev/null; then
+if declare -f svc_hook_check &> /dev/null; then
     svc_hook_check
 fi
