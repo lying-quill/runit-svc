@@ -12,19 +12,19 @@ then you should be able to invoke the utility script:
 # the default value for SVDIR is /etc/runit/sv
 # i suggest using a different SVDIR for system services to prevent
 # conflict with os packages (e.g. /etc/runit/svc)
-export SVDIR=/home/user/.config/service
+export SVDIR=~/.config/service
 runit-svc create your-service-name [--with-check] [--down] [--editor]
 ```
 let's break it down:
 - __your-service-name__: required. the name of your service, which will also be
   the name of its sv directory. this is limited to `[a-z0-9-_]`
-- __--with-check (-c)__: optional. creates a "check" hook for your service. it is
-  recommended to only use this if you have set up an actual check logic in your
-  service config file. since the default behavior is to always return 0!
+- __--with-check (-c)__: optional. creates a "check" hook for your service. it
+  is recommended to only use this if you have set up an actual check logic in
+  your service config file. since the default behavior is to always return 0!
 - __--down (-d)__: optional. creates a "down" flag that prevents runit from
   automatically running it.
-- __--editor (-e)__: optional. opens the $EDITOR (or `nano` if that variable isn't
-  declared) with the service's config file as input.
+- __--editor (-e)__: optional. opens the $EDITOR (or `nano` if that variable
+  isn't declared) with the service's config file as input.
 
 __NOTE__: right now combined short args (e.g. `-ecd`) don't work. use `-e -c -d`
 instead.
