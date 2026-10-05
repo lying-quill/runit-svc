@@ -61,6 +61,8 @@ _create_dir() {
 : "${svc_user:=$(id -un)}"
 : "${svc_group:=$(id -gn)}"
 
+_current_user=$(id -un)
+_current_group=$(id -gn)
 _start_hook_exit_code=0
 
 if [ ! -f "$svc_bin" ]; then
@@ -86,18 +88,39 @@ if ! declare -p svc_args &> /dev/null; then
     declare -a svc_args
 fi
 
-_chpst_args=(
-    "-v"
-    "-0"
-    "-C" "$svc_pwd"
-    "-U" "$svc_user:$svc_group"
-    "-u" "$svc_user:$svc_group"
-)
+if [ "$_current_user" != "$svc_user" ] ||
+    [ "$_current_group" != "$svc_group" ]; then
+    _chpst_args=(
+        -v -0
+        -C "$svc_pwd"
+        -u "$svc_user:$svc_group"
+    )
 
-if [ -n "${svc_env_dir:-}" ]; then
-    _chpst_args+=(-e "$svc_env_dir")
+    if [ -n "${svc_env_dir:-}" ]; then
+        _chpst_args+=(-e "$svc_env_dir")
+    fi
+
+    _print_log "[D] chpst ${_chpst_args[*]} $svc_bin ${svc_args[*]}"
+    exec chpst "${_chpst_args[@]}" "$svc_bin" "${svc_args[@]}"
+else
+    # emulate the chpst behavior for its -e flag
+    if [ -n "${svc_env_dir:-}" ] && [ -d "$svc_env_dir" ]; then
+        shopt -s nullglob
+        for file in "$svc_env_dir"/*; do
+            [ -f "$file" ] || continue
+            [ -s "$file" ] || continue
+
+            _var=${file##*/}
+            _val=$(< "$file")
+
+            _print_log "[D] env['$_var']='$_val'"
+            export "$_var=$_val"
+        done
+    fi
+
+    # emulate chpst's -C flag
+    cd "$svc_pwd"
+
+    _print_log "[D] $svc_bin ${svc_args[*]}"
+    exec "$svc_bin" "${svc_args[@]}"
 fi
-
-_print_log "[D] chpst ${_chpst_args[*]} $svc_bin ${svc_args[*]}"
-
-exec chpst "${_chpst_args[@]}" "$svc_bin" "${svc_args[@]}"
